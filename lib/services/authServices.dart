@@ -17,14 +17,25 @@ class AuthServices {
     BuildContext? context,
   }) async {
     try {
+      if (email == null || email.isEmpty) {
+        throw Exception('Email is required');
+      }
+      if (pass == null || pass.isEmpty) {
+        throw Exception('Password is required');
+      }
+      
       await auth.signInWithEmailAndPassword(
-        email: email!,
-        password: pass!,
+        email: email,
+        password: pass,
       );
-      Navigator.pushReplacementNamed(context!, 'Home Screen');
+      if (context != null) {
+        Navigator.pushReplacementNamed(context, 'Home Screen');
+      }
       return 'success';
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.code);
+      throw Exception(e.message ?? e.code);
+    } catch (e) {
+      throw Exception('Sign in failed: $e');
     }
   }
 
@@ -35,16 +46,34 @@ class AuthServices {
     BuildContext? context,
   }) async {
     try {
+      if (name == null || name.isEmpty) {
+        throw Exception('Name is required');
+      }
+      if (email == null || email.isEmpty) {
+        throw Exception('Email is required');
+      }
+      if (pass == null || pass.isEmpty) {
+        throw Exception('Password is required');
+      }
+      
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-          email: email!, password: pass!);
-      fireStore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({"uid": userCredential.user!.uid, 'name': name, 'email': email});
-      Navigator.pushReplacementNamed(context!, 'Home Screen');
+          email: email, password: pass);
+      
+      if (userCredential.user != null) {
+        await fireStore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({"uid": userCredential.user!.uid, 'name': name, 'email': email});
+      }
+      
+      if (context != null) {
+        Navigator.pushReplacementNamed(context, 'Home Screen');
+      }
       return 'success';
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.code);
+      throw Exception(e.message ?? e.code);
+    } catch (e) {
+      throw Exception('Sign up failed: $e');
     }
   }
 
@@ -52,12 +81,4 @@ class AuthServices {
     await FirebaseAuth.instance.signOut();
   }
 
-  Future addFriend() async {
-
-    // fireStore
-    //     .collection('users')
-    //     .doc(userCredential.user!.uid)
-    //     .set({"uid": userCredential.user!.uid, 'name': name, 'email': email});
-    //
-  }
 }

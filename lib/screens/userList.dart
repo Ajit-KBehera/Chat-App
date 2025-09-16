@@ -13,9 +13,6 @@ class UserList extends StatefulWidget {
 class _UserListState extends State<UserList> {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
-  void scanQr() {
-    Navigator.pushNamed(context, 'Scan QR');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +75,8 @@ class _UserListState extends State<UserList> {
             Map<String, dynamic> userData =
                 users[index].data()! as Map<String, dynamic>;
             String userEmail = userData['email'];
-            if (userEmail == auth.currentUser!.email) {
+            final currentUser = auth.currentUser;
+            if (currentUser != null && userEmail == currentUser.email) {
               return const SizedBox();
             } else {
               return const Divider();
@@ -89,7 +87,8 @@ class _UserListState extends State<UserList> {
                 users[index].data()! as Map<String, dynamic>;
             String userName = userData['name'];
             String userEmail = userData['email'];
-            if (userEmail == auth.currentUser!.email) {
+            final currentUser = auth.currentUser;
+            if (currentUser != null && userEmail == currentUser.email) {
               return const SizedBox();
             }
             return ListTile(

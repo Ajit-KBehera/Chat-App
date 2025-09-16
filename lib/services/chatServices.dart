@@ -9,44 +9,54 @@ class ChatServices extends ChangeNotifier {
 
   Future<void> sendMessage(String? receiverId, String? msg,
       {List<String>? groupMembers, String? groupName}) async {
-    final String uid = auth.currentUser!.uid;
-    final String uEmail = auth.currentUser!.email.toString();
-    final Timestamp timestamp = Timestamp.now();
+    try {
+      final user = auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final String uid = user.uid;
+      final String uEmail = user.email ?? '';
+      final Timestamp timestamp = Timestamp.now();
 
-    MsgModel newMessage = MsgModel(
-      senderId: uid,
-      senderMail: uEmail,
-      receiverId: receiverId,
-      message: msg,
-      timestamp: timestamp,
-    );
+      MsgModel newMessage = MsgModel(
+        senderId: uid,
+        senderMail: uEmail,
+        receiverId: receiverId,
+        message: msg,
+        timestamp: timestamp,
+      );
 
-    if (groupMembers != null && groupName != null) {
-      DocumentReference groupDocRef = await fireStore.collection('chats').add({
-        'type': "group",
-        'name': groupName,
-        'members': groupMembers,
-        'lastMessage': newMessage.toMap(),
-      });
+      if (groupMembers != null && groupName != null) {
+        DocumentReference groupDocRef = await fireStore.collection('chats').add({
+          'type': "group",
+          'name': groupName,
+          'members': groupMembers,
+          'lastMessage': newMessage.toMap(),
+        });
 
-      await groupDocRef.collection('messages').add(newMessage.toMap());
-    } else {
-      // Personalized chat
-      List<String> ids = [uid, receiverId!];
-      ids.sort();
-      String chatRoomId = ids.join('_');
+        await groupDocRef.collection('messages').add(newMessage.toMap());
+      } else {
+        // Personalized chat
+        List<String> ids = [uid, receiverId!];
+        ids.sort();
+        String chatRoomId = ids.join('_');
 
-      await fireStore.collection('chats').doc(chatRoomId).set({
-        'type': "pc",
-        'members': ids,
-        'lastMessage': newMessage.toMap(),
-      });
+        await fireStore.collection('chats').doc(chatRoomId).set({
+          'type': "pc",
+          'members': ids,
+          'lastMessage': newMessage.toMap(),
+        });
 
-      await fireStore
-          .collection('chats')
-          .doc(chatRoomId)
-          .collection('messages')
-          .add(newMessage.toMap());
+        await fireStore
+            .collection('chats')
+            .doc(chatRoomId)
+            .collection('messages')
+            .add(newMessage.toMap());
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+      throw Exception('Failed to send message: $e');
     }
   }
 
@@ -68,8 +78,13 @@ class ChatServices extends ChangeNotifier {
 
   Future<void> sendMessageToGroup(String groupId, String message) async {
     try {
-      final String uid = auth.currentUser!.uid;
-      final String uEmail = auth.currentUser!.email.toString();
+      final user = auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final String uid = user.uid;
+      final String uEmail = user.email ?? '';
       final Timestamp timestamp = Timestamp.now();
       MsgModel newMessage = MsgModel(
         senderId: uid,
@@ -85,6 +100,7 @@ class ChatServices extends ChangeNotifier {
       print('Message sent to group $groupId');
     } catch (e) {
       print('Error sending message to group: $e');
+      throw Exception('Failed to send message to group: $e');
     }
   }
 

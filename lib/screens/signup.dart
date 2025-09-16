@@ -67,7 +67,9 @@ class _SignupState extends State<Signup> {
       showLoader(false);
     } catch (e) {
       showLoader(false);
-      toast(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: $e')),
+      );
     }
   }
 

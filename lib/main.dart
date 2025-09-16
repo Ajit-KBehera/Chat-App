@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
               iconTheme: IconThemeData(color: Colors.white),
               elevation: 5,
               shadowColor: Colors.black),
-          bottomAppBarTheme: const BottomAppBarTheme(
+          bottomAppBarTheme: const BottomAppBarThemeData(
             elevation: 5,
             color: Color(0xffc46210),
             shape: CircularNotchedRectangle(),

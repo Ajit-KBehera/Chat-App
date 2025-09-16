@@ -28,10 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     height = getHeight(context);
     width = getWidth(context);
-    print(auth.currentUser);
+    final user = auth.currentUser;
+    if (user == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('User not authenticated'),
+        ),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome - ${auth.currentUser!.email}'),
+        title: Text('Welcome - ${user.email}'),
         centerTitle: true,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -108,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: ChatServices().getAllChats(auth.currentUser!.uid),
+        stream: ChatServices().getAllChats(user.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -167,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : FutureBuilder<DocumentSnapshot>(
                       future: ChatServices().getUserData(chatsData['members']
-                          .firstWhere((id) => id != auth.currentUser!.uid)),
+                          .firstWhere((id) => id != user.uid)),
                       builder: (context, receiverSnapshot) {
                         if (receiverSnapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -197,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "name": receiverName,
                                 "type": chatsData["type"],
                                 "rid": chatsData['members'].firstWhere(
-                                    (id) => id != auth.currentUser!.uid),
+                                    (id) => id != user.uid),
                               },
                             );
                           },

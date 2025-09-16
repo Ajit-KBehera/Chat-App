@@ -38,7 +38,9 @@ class _LoginState extends State<Login> {
       showLoader(false);
     } catch (e) {
       showLoader(false);
-      toast(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $e')),
+      );
     }
   }
 

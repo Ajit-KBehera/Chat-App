@@ -22,13 +22,25 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
   void sendMessage(rid, msg) async {
-    await chatServices.sendMessage(rid, msg);
-    msgController.clear();
+    try {
+      await chatServices.sendMessage(rid, msg);
+      msgController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: $e')),
+      );
+    }
   }
 
   void sendGroupMessage(id, msg) async {
-    await chatServices.sendMessageToGroup(id, msg);
-    msgController.clear();
+    try {
+      await chatServices.sendMessageToGroup(id, msg);
+      msgController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send group message: $e')),
+      );
+    }
   }
 
   String formatTimestamp(DateTime timestamp) {
@@ -111,8 +123,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget msgList(rid, type) {
+    final user = auth.currentUser;
+    if (user == null) {
+      return const Center(
+        child: Text('User not authenticated'),
+      );
+    }
+    
     return StreamBuilder(
-      stream: chatServices.receiveMessages(auth.currentUser!.uid, rid, type),
+      stream: chatServices.receiveMessages(user.uid, rid, type),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -131,7 +150,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: snapshot.data!.docs.map((e) {
             Map<String, dynamic> data = e.data() as Map<String, dynamic>;
 
-            bool isCurrentUser = data['senderId'] == auth.currentUser!.uid;
+            bool isCurrentUser = data['senderId'] == user.uid;
 
             return buildMessageBubble(
                 isCurrentUser, data['message'], data['timestamp']);

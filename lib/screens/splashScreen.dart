@@ -19,16 +19,18 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(
       const Duration(seconds: 4),
       () {
-        if (firebaseUser != null) {
-          Navigator.pushReplacementNamed(
-            context,
-            'Home Screen',
-          );
-        } else {
-          Navigator.pushReplacementNamed(
-            context,
-            'Login Screen',
-          );
+        if (mounted) {
+          if (firebaseUser != null) {
+            Navigator.pushReplacementNamed(
+              context,
+              'Home Screen',
+            );
+          } else {
+            Navigator.pushReplacementNamed(
+              context,
+              'Login Screen',
+            );
+          }
         }
       },
     );

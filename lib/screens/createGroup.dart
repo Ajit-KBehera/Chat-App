@@ -29,10 +29,17 @@ class _CreateGroupState extends State<CreateGroup> {
   }
 
   void fetchData() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').get();
-    setState(() {
-      userList = querySnapshot.docs.map((e) => e.data()).toList();
-    });
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('users').get();
+      setState(() {
+        userList = querySnapshot.docs.map((e) => e.data()).toList();
+      });
+    } catch (e) {
+      print('Error fetching users: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load users: $e')),
+      );
+    }
   }
 
   void toggleUserSelection(String userId) {
@@ -51,13 +58,20 @@ class _CreateGroupState extends State<CreateGroup> {
         showLoader = true;
       });
       String groupName = grpName.text.trim();
-      selectedUserIds.add(auth.currentUser!.uid);
+      final user = auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      selectedUserIds.add(user.uid);
       await ChatServices().createGroup(groupName, selectedUserIds.toList());
       grpName.clear();
       selectedUserIds.clear();
       Navigator.of(context).pop();
     } catch (e) {
       print('Error creating group: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create group: $e')),
+      );
     } finally {
       setState(() {
         showLoader = false;
@@ -95,7 +109,8 @@ class _CreateGroupState extends State<CreateGroup> {
             child: ListView.separated(
                 itemBuilder: (context, index) {
                   var user = userList[index];
-                  if (user['email'] == auth.currentUser!.email) {
+                  final currentUser = auth.currentUser;
+                  if (currentUser != null && user['email'] == currentUser.email) {
                     return const SizedBox();
                   }
                   return ListTile(
@@ -109,7 +124,8 @@ class _CreateGroupState extends State<CreateGroup> {
                 },
                 separatorBuilder: (context, index) {
                   var user = userList[index];
-                  if (user['email'] == auth.currentUser!.email) {
+                  final currentUser = auth.currentUser;
+                  if (currentUser != null && user['email'] == currentUser.email) {
                     return const SizedBox();
                   }
                   return const Divider();
@@ -132,6 +148,12 @@ class _CreateGroupState extends State<CreateGroup> {
               onPressed: () {
                 if(!grpName.text.isEmptyOrNull && selectedUserIds.isNotEmpty) {
                   createGroup();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a group name and select at least one member'),
+                    ),
+                  );
                 }
               },
               child: const Text('Create Group'),
